@@ -1,5 +1,5 @@
 import "./App.css";
-import { Button, Space, Input } from "antd";
+import { Button, Space, Input, Select, Image, Badge } from "antd";
 import {
   DB3Client,
   MetamaskWallet,
@@ -8,6 +8,8 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
+  query,
+  where,
 } from "db3.js";
 import { useEffect, useState } from "react";
 import { useAsyncFn } from "react-use";
@@ -19,9 +21,9 @@ const wallet = new MetamaskWallet(window);
 
 const databaseAddr = "0x14c4eacfcb43d09b09139a0323d49fbe4ea0d5c9";
 const collection_message = "message";
-const collection_likes = "msg_likes";
-// const defaultEndpoint = "https://grpc.devnet.db3.network";
-const defaultEndpoint = "http://127.0.0.1:26659";
+const collection_likes = "message_likes";
+const defaultEndpoint = "https://grpc.devnet.db3.network";
+// const defaultEndpoint = "http://127.0.0.1:26659";
 
 function App() {
   const [client, setClient] = useState();
@@ -37,6 +39,9 @@ function App() {
   const [messages, setMessages] = useState("");
   const [loading, setLoading] = useState(false);
   const [inited, setInited] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [messageView, setMessageView] = useState([]);
+
   // Step1: connect Metamask wallet and get evm address
   const [res, connectWallet] = useAsyncFn(async () => {
     try {
@@ -46,26 +51,32 @@ function App() {
       setDb3AccountAddr(addr);
       const evmAddr = wallet.getEvmAddress();
       setEvmAccountAddr(evmAddr);
-
-      const client = new DB3Client(endpoint, wallet);
-      setClient(client);
-
-      const db = new DB3Store(databaseAddr, client);
-      console.log(db);
-      const collectionLikesIns = await collection(db, collection_likes);
-      const collectionMsgIns = await collection(db, collection_message);
-      setCollectionMsgIns(collectionMsgIns);
-      console.log(collectionMsgIns);
-
-      setCollectionLikesIns(collectionLikesIns);
-      console.log(collectionLikesIns);
-
       setLoading(false);
-      setInited(true);
+      setConnected(true);
     } catch (e) {
       console.log(e);
     }
   }, [wallet]);
+
+  useEffect(() => {
+    async function init() {
+      console.log(endpoint);
+      setLoading(true);
+      const client = new DB3Client(endpoint, wallet);
+      setClient(client);
+
+      const db = new DB3Store(databaseAddr, client);
+      const collectionLikesIns = await collection(db, collection_likes);
+      const collectionMsgIns = await collection(db, collection_message);
+      setCollectionMsgIns(collectionMsgIns);
+
+      setCollectionLikesIns(collectionLikesIns);
+
+      setLoading(false);
+      setInited(true);
+    }
+    init();
+  }, [endpoint, wallet]);
 
   const [query_session, getQuerySessionToken] = useAsyncFn(async () => {
     try {
@@ -89,7 +100,7 @@ function App() {
     [collectionMsgIns]
   );
 
-  const [, addMsgHandle] = useAsyncFn(
+  const [resMsg, addMsgHandle] = useAsyncFn(
     async (msg) => {
       try {
         setLoading(true);
@@ -107,11 +118,67 @@ function App() {
     try {
       const messages = await getDocs(collectionMsgIns);
       setMessages(messages);
-      console.log({ messages });
     } catch (e) {
       console.log(e);
     }
   }, [collectionMsgIns]);
+
+  async function modifyMsg() {
+    if (collectionLikesIns) {
+      const view = [];
+      // console.log(messages.docs);
+      messages?.docs?.map(async (item, index) => {
+        const docId = item.entry.id;
+        console.log(docId);
+        const likes = await getDocs(
+          query(collectionLikesIns, where("docId", "==", docId))
+        );
+        console.log(likes);
+        view.push({
+          // msg: item,
+          likedByMe: false,
+          likeCount: likes?.docs?.length,
+        });
+      });
+
+      setMessageView(view);
+    }
+  }
+
+  useEffect(() => {
+    modifyMsg();
+  }, [messages]);
+  console.log(messageView);
+  console.log(messageView.length);
+
+  // const [, getLikesHandle] = useAsyncFn(
+  //   async (docs) => {
+  //     try {
+  //       console.log(docs);
+  //       const view = [];
+  //       docs?.map(async (item, index) => {
+  //         const likes = await getDocs(
+  //           query(
+  //             collectionLikesIns,
+  //             where("docId", "==",)
+  //           )
+  //         );
+
+  //         view.push({
+  //           msg: item,
+  //           likedByMe: false,
+  //           likeCount: likes?.docs?.length,
+  //         });
+  //       });
+
+  //       console.log(view);
+  //       setMessageView(view);
+  //     } catch (e) {
+  //       console.log(e);
+  //     }
+  //   },
+  //   [collectionLikesIns]
+  // );
 
   const [, addmsgLikeHandle] = useAsyncFn(
     async (msgLike) => {
@@ -127,16 +194,23 @@ function App() {
     [collectionLikesIns]
   );
 
-  function addPoint(doc) {
+  function addPoint(id, msgOwner) {
     const msgLike = {
-      //  doc.entry.id
+      docId: id,
+      msgOwner: msgOwner,
     };
     addmsgLikeHandle(msgLike);
   }
 
   useEffect(() => {
-    if (!loading && collectionMsgIns) getMsgHandle();
+    if (!loading && collectionMsgIns) {
+      getMsgHandle();
+    }
   }, [loading]);
+
+  function ifLikedByMe(like) {
+    like?.docs.map((i) => {});
+  }
 
   return (
     <div className="App">
@@ -145,7 +219,43 @@ function App() {
         This web site is build entirely base on a decentralized database
         <a hrep="https://db3.network"> DB3 Network</a>
       </h4>
+
       <Space direction="vertical">
+        <div>
+          <p>Choice Endpoint</p>
+          <Select
+            defaultValue={defaultEndpoint}
+            style={{ width: 320 }}
+            onChange={(e) => {
+              console.log(e);
+              setEndpoint(e);
+            }}
+            options={[
+              {
+                value: "https://grpc.devnet.db3.network",
+                label: "https://grpc.devnet.db3.network",
+              },
+              {
+                value: "http://127.0.0.1:26659",
+                label: "http://127.0.0.1:26659",
+              },
+              {
+                value: "http://18.162.230.6:26659",
+                label: "http://18.162.230.6:26659",
+              },
+              {
+                value: "http://16.163.108.68:26659",
+                label: "http://16.163.108.68:26659",
+              },
+            ]}
+          />
+        </div>
+
+        <Image
+          width={100}
+          style={{ padding: "left" }}
+          src="../Logo_standard.png"
+        ></Image>
         <div>
           <p>DB3 account addr: {db3AccountAddr}</p>
           <p>EVM account addr: {evmAccountAddr}</p>
@@ -161,8 +271,8 @@ function App() {
           />
           <Button
             type="primary"
-            // loading={loading}
-            disabled={!inited}
+            loading={resMsg.loading}
+            disabled={!inited || !connected}
             onClick={() =>
               addMsgHandle({ time: new Date().toUTCString(), msg })
             }
@@ -171,10 +281,10 @@ function App() {
           </Button>
         </div>
         <Space direction="vertical" size={8}>
-          {messages?.docs?.map((doc, index) => (
+          <p>{messages.length}</p>
+          {messages.docs?.map((item, index) => (
             <div
               key={index}
-              id={doc.entry.id}
               style={{
                 backgroundColor: "#f5f5f5",
                 border: "1px solid #ccc",
@@ -189,30 +299,39 @@ function App() {
                 style={{
                   backgroundColor: "white",
                   border: "1px solid #ccc",
-                  borderRadius: 4,
-                  padding: 4,
                   fontSize: 12,
                   lineHeight: "initial",
                 }}
               >
-                {JSON.stringify(doc?.entry?.doc?.msg)}
+                {item?.entry?.doc?.msg}
               </pre>
-              <p style={{ textAlign: "right" }}>
-                from:{String(doc?.entry?.owner)}
-              </p>
-              <p style={{ textAlign: "right" }}>
-                {" "}
-                at: {String(doc?.entry?.doc?.time)}
-              </p>
-              {db3AccountAddr === doc?.entry?.owner && (
-                <Button loading={loading} onClick={() => deleteMsg(doc)}>
+
+              <div>
+                <p style={{ textAlign: "right" }}>
+                  from:{String(item?.entry?.owner)}
+                </p>
+                <p style={{ textAlign: "right" }}>
+                  at: {String(item?.entry?.doc?.time)}
+                </p>
+              </div>
+
+              {db3AccountAddr === item?.entry?.owner && (
+                <Button
+                  disabled={!inited || !connected}
+                  onClick={() => deleteMsg(doc)}
+                >
                   delete
                 </Button>
               )}
 
-              <Button loading={loading} onClick={() => addPoint(doc)}>
-                Like
-              </Button>
+              <Badge count={item.likeCount}>
+                <Button
+                  disabled={!inited || !connected}
+                  onClick={() => addPoint(item?.entry?.id, item?.entry?.owner)}
+                >
+                  Like
+                </Button>
+              </Badge>
             </div>
           ))}
         </Space>
