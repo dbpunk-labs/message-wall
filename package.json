@@ -11,10 +11,11 @@
   "dependencies": {
     "antd": "^5.3.3",
     "buffer": "^6.0.3",
-    "db3.js": "^0.2.20",
+    "db3.js": "^0.2.23",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-use": "^17.4.0"
+    "react-use": "^17.4.0",
+    "use-reducer-async": "^2.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",
