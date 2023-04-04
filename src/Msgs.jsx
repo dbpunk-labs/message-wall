@@ -4,7 +4,7 @@ import { MessageContext } from "./App";
 import { addDoc, getDocs } from "db3.js";
 import { Input, Button } from "antd";
 
-import MsgCard from "./MsgCard";
+import Card from "./Card";
 import { useAsyncFn } from "react-use";
 
 export default function Msgs() {
@@ -57,7 +57,7 @@ export default function Msgs() {
       </div>
 
       {messages?.docs.map((msg, i) => (
-        <MsgCard id={i} msg={msg} />
+        <Card id={i} msg={msg} />
       ))}
     </div>
   );
