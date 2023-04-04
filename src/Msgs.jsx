@@ -57,7 +57,7 @@ export default function Msgs() {
       </div>
 
       {messages?.docs.map((msg, i) => (
-        <MsgCard style={{ paddingTop: "2em" }} id={i} msg={msg} />
+        <MsgCard id={i} msg={msg} />
       ))}
     </div>
   );
