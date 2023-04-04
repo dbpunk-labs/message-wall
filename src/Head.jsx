@@ -18,49 +18,51 @@ export default function Head({ connectWallet }) {
         <a hrep="https://db3.network"> DB3 Network</a>
       </h4>
 
-      <Space>
-        <div>
-          <p>Choice Endpoint</p>
-          <Select
-            defaultValue={defaultEndpoint}
-            style={{ width: 320 }}
-            onChange={(e) => {
-              console.log(e);
-              setEndpoint(e);
-            }}
-            options={[
-              {
-                value: "https://grpc.devnet.db3.network",
-                label: "https://grpc.devnet.db3.network",
-              },
-              {
-                value: "http://127.0.0.1:26659",
-                label: "http://127.0.0.1:26659",
-              },
-              {
-                value: "http://18.162.230.6:26659",
-                label: "http://18.162.230.6:26659",
-              },
-              {
-                value: "http://16.163.108.68:26659",
-                label: "http://16.163.108.68:26659",
-              },
-            ]}
-          />
-        </div>
-
+      <Space direction="vertical">
         <Image
           width={100}
           style={{ padding: "left" }}
           src="../Logo_standard.png"
         ></Image>
-        <div>
-          <p>DB3 account addr: {userAddr.db3AccountAddr}</p>
-          <p>EVM account addr: {userAddr.evmAccountAddr}</p>
-          <Button type="primary" onClick={() => connectWallet()}>
-            Connect Wallet
-          </Button>
-        </div>
+        <Space direction="horizontal">
+          <div>
+            <p>Choice Endpoint</p>
+            <Select
+              defaultValue={defaultEndpoint}
+              style={{ width: 320 }}
+              onChange={(e) => {
+                console.log(e);
+                setEndpoint(e);
+              }}
+              options={[
+                {
+                  value: "https://grpc.devnet.db3.network",
+                  label: "https://grpc.devnet.db3.network",
+                },
+                {
+                  value: "http://127.0.0.1:26659",
+                  label: "http://127.0.0.1:26659",
+                },
+                {
+                  value: "http://18.162.230.6:26659",
+                  label: "http://18.162.230.6:26659",
+                },
+                {
+                  value: "http://16.163.108.68:26659",
+                  label: "http://16.163.108.68:26659",
+                },
+              ]}
+            />
+          </div>
+
+          <div>
+            <p>DB3AccountAddr: {userAddr.db3AccountAddr}</p>
+            <p>EVMAccountAddr: {userAddr.evmAccountAddr}</p>
+            <Button type="primary" onClick={() => connectWallet()}>
+              Connect Wallet
+            </Button>
+          </div>
+        </Space>
       </Space>
     </div>
   );

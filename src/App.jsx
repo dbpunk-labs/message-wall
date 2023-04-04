@@ -76,7 +76,6 @@ function App() {
       setCollectionLikesIns(collectionLikesIns);
 
       setLoading(false);
-      setInited(true);
     }
     init();
   }, [endpoint, wallet]);
@@ -89,71 +88,6 @@ function App() {
       setLoading(false);
     },
     [collectionMsgIns]
-  );
-
-  const [resMsg, addMsgHandle] = useAsyncFn(
-    async (msg) => {
-      try {
-        setLoading(true);
-        await addDoc(collectionMsgIns, msg);
-        await new Promise((r) => setTimeout(r, 1500));
-        setLoading(false);
-      } catch (e) {
-        console.log(e);
-      }
-    },
-    [collectionMsgIns]
-  );
-
-  const [, getMsgHandle] = useAsyncFn(async () => {
-    try {
-      const messages = await getDocs(collectionMsgIns);
-      setMessages(messages);
-    } catch (e) {
-      console.log(e);
-    }
-  }, [collectionMsgIns]);
-
-  async function modifyMsg() {
-    if (collectionLikesIns) {
-      const view = [];
-      // console.log(messages.docs);
-      messages?.docs?.map(async (item, index) => {
-        const docId = item.entry.id;
-        const likes = await getDocs(
-          query(collectionLikesIns, where("docId", "==", docId))
-        );
-        console.log(likes);
-        view.push({
-          msg: item,
-          likedByMe: false,
-          likeCount: likes?.docs?.length,
-        });
-      });
-
-      setMessageView(view);
-    }
-  }
-
-  useEffect(() => {
-    modifyMsg();
-  }, [messages]);
-
-  console.log(messageView);
-  console.log(messageView.length);
-
-  const [, addmsgLikeHandle] = useAsyncFn(
-    async (msgLike) => {
-      try {
-        setLoading(true);
-        await addDoc(collectionLikesIns, msgLike);
-        await new Promise((r) => setTimeout(r, 1500));
-        setLoading(false);
-      } catch (e) {
-        console.log(e);
-      }
-    },
-    [collectionLikesIns]
   );
 
   return (

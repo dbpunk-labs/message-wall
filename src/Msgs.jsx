@@ -26,22 +26,11 @@ export default function Msgs() {
     [msgRef]
   );
 
-  // const [, getMsgHandle] = useAsyncFn(async () => {
-  //   try {
-  //     const messages = await getDocs(msgRef);
-  //     setMessages(messages);
-  //     console.log(messages);
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // }, [msgRef]);
-
   useEffect(() => {
     async function getMsgHandle() {
       try {
         const messages = await getDocs(msgRef);
         setMessages(messages);
-        console.log(messages);
       } catch (e) {
         console.log(e);
       }
@@ -68,7 +57,7 @@ export default function Msgs() {
       </div>
 
       {messages?.docs.map((msg, i) => (
-        <MsgCard id={i} msg={msg} />
+        <MsgCard style={{ paddingTop: "2em" }} id={i} msg={msg} />
       ))}
     </div>
   );

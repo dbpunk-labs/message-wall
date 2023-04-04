@@ -1,24 +1,51 @@
-import { getDocs, query, where } from "db3.js";
+import { getDocs, query, where, addDoc } from "db3.js";
 import React, { useContext, useEffect, useState } from "react";
 import { MessageContext } from "./App";
 import { Space, Button, Badge } from "antd";
+import { useAsyncFn } from "react-use";
 
 export default function MsgCard({ msg }) {
   const msgContext = useContext(MessageContext);
   const { likesRef, userAddr } = msgContext;
   const [likes, setLikes] = useState([]);
+  const [likedByMe, setLikedByMe] = useState(false);
   useEffect(() => {
     async function listList() {
       const re = await getDocs(
         query(likesRef, where("docId", "==", msg.entry.id))
       );
+
       setLikes(re?.docs);
     }
 
     listList();
-  }, [msg]);
+    ifLikedByMe();
+  }, [msg, userAddr]);
+
+  function ifLikedByMe() {
+    likes?.forEach((i) => {
+      console.log(likedByMe);
+
+      if (i.entry.owner === userAddr.db3AccountAddr) {
+        setLikedByMe(true);
+        return;
+      }
+    });
+  }
+
+  const [, addPoint] = useAsyncFn(
+    async (msgLike) => {
+      try {
+        await addDoc(likesRef, msgLike);
+        await new Promise((r) => setTimeout(r, 1500));
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    [likesRef]
+  );
   return (
-    <div>
+    <div style={{ paddingTop: "1em" }}>
       <Space direction="vertical" size={8}>
         <div
           style={{
@@ -33,9 +60,9 @@ export default function MsgCard({ msg }) {
         >
           <pre
             style={{
-              backgroundColor: "white",
+              backgroundColor: "#f5f5f5",
               border: "1px solid #ccc",
-              fontSize: 12,
+              fontSize: 16,
               lineHeight: "initial",
             }}
           >
@@ -50,22 +77,21 @@ export default function MsgCard({ msg }) {
           </div>
 
           {userAddr.db3AccountAddr === msg.entry?.owner && (
-            <Button
-              disabled={!inited || !connected}
-              onClick={() => deleteMsg(doc)}
-            >
+            <Button disabled={!likesRef} onClick={() => deleteMsg(doc)}>
               delete
             </Button>
           )}
-
-          <Badge count={likes.length}>
+          <Space>
             <Button
-              disabled={!likesRef}
-              onClick={() => addPoint(msg.entry?.id, msg?.entry?.owner)}
+              disabled={!likesRef || likedByMe}
+              onClick={() =>
+                addPoint({ docId: msg.entry?.id, msgOwner: msg?.entry?.owner })
+              }
             >
               Like
             </Button>
-          </Badge>
+            <p>{likes.length}</p>
+          </Space>
         </div>
       </Space>
     </div>
