@@ -31,7 +31,6 @@ export default function Head({ connectWallet }) {
               defaultValue={defaultEndpoint}
               style={{ width: 320 }}
               onChange={(e) => {
-                console.log(e);
                 setEndpoint(e);
               }}
               options={[

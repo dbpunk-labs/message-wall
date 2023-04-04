@@ -1,7 +1,7 @@
 import { getDocs, query, where, addDoc } from "db3.js";
 import React, { useContext, useEffect, useState } from "react";
 import { MessageContext } from "./App";
-import { Space, Button, Badge } from "antd";
+import { Space, Button } from "antd";
 import { useAsyncFn } from "react-use";
 
 export default function MsgCard({ msg }) {
